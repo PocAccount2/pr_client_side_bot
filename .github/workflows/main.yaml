@@ -74,5 +74,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo  ${{ steps.gemini.outputs }}
-          gh pr comment ${{ github.event.pull_request.number }} --body ${{ steps.gemini.outputs.text }}
+          echo "${{ steps.gemini.outputs.text }}" > gemini_comment.md
+
+          gh pr comment ${{ github.event.pull_request.number }} --body-file gemini_comment.md

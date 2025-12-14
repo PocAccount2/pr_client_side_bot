@@ -8,6 +8,10 @@ jobs:
   code_review:
     name: client side code review
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
     steps:
       
       - name: Checkout code
@@ -70,4 +74,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body ${{ steps.gemini.outputs }}
+          echo  ${{ steps.gemini.outputs }}
+          gh pr comment ${{ github.event.pull_request.number }} --body ${{ steps.gemini.outputs.text }}

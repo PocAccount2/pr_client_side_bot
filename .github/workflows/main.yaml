@@ -19,12 +19,43 @@ jobs:
       - name: fetch diff file
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
         run: |
           gh pr diff ${{ github.event.pull_request.number }} > pr_diff.txt
 
 
-      - name: show diff file
-        run: cat pr_diff.txt
+      - name: Run Gemini CLI
+        uses: google-github-actions/run-gemini-cli@v0.1.16
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+
+          prompt: |
+            You are a senior security engineer.
+
+            Perform a **client-side code review** using ONLY the information below.
+
+            --- PR TITLE ---
+            ${{ github.event.pull_request.title }}
+
+            --- PR DESCRIPTION ---
+            ${{ github.event.pull_request.body }}
+
+            --- CODE DIFF ---
+            ```
+            $(cat pr_diff.txt)
+            ```
+
+            Review priorities:
+            1. 🔴 **Security issues** (XSS, DOM injection, unsafe eval, token leaks, insecure storage)
+            2. 🟠 **Bugs & logic errors**
+            3. 🔵 **Code quality & maintainability**
+
+            Output format:
+            - 🔴 Critical Security Issues
+            - 🟠 Bugs / Logical Errors
+            - 🔵 Code Quality
+            - ✅ Overall Recommendation (Approve / Request Changes)
+
+            Be concise, concrete, and actionable.
           
         

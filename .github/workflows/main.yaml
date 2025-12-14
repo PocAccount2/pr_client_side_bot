@@ -23,6 +23,13 @@ jobs:
         run: |
           gh pr diff ${{ github.event.pull_request.number }} > pr_diff.txt
 
+      - name: Read diff file
+        id: read_diff
+        run: |
+          echo "diff<<EOF" >> $GITHUB_OUTPUT
+          cat pr_diff.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Run Gemini CLI
         id: gemini
         uses: google-github-actions/run-gemini-cli@v0.1.16
@@ -41,7 +48,7 @@ jobs:
 
             --- CODE DIFF ---
             ```
-            $(cat pr_diff.txt)
+            ${{ steps.read_diff.outputs.diff }}
             ```
 
             Review priorities:

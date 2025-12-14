@@ -17,19 +17,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch PR diff
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh pr diff ${{ github.event.pull_request.number }} > pr_diff.txt
-
-      - name: Read diff file
-        id: read_diff
-        run: |
-          echo "diff<<EOF" >> $GITHUB_OUTPUT
-          cat pr_diff.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
       - name: Run Gemini CLI
         id: gemini
         uses: google-github-actions/run-gemini-cli@v0.1.16
@@ -47,9 +34,7 @@ jobs:
             ${{ github.event.pull_request.body }}
 
             --- CODE DIFF ---
-            ```
-            ${{ steps.read_diff.outputs.diff }}
-            ```
+            Review the pull request changes in this repository.
 
             Review priorities:
             1. 🔴 Security issues (XSS, DOM injection, hardcoded secrets)
@@ -68,6 +53,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "${{ steps.gemini.outputs.text }}" > gemini_comment.md
+          echo "${{ steps.gemini.outputs.summary }}" > gemini_comment.md
           gh pr comment ${{ github.event.pull_request.number }} \
             --body-file gemini_comment.md

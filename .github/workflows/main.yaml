@@ -1,0 +1,30 @@
+name: main workflow
+
+on: pull_request
+
+
+jobs:
+  
+  code_review:
+    name: client side code review
+    runs-on: ubuntu-latest
+    steps:
+      
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+
+      - name: fetch diff file
+        run: |
+          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3.diff" \
+          "${{ github.event.pull_request.diff_url }}" \
+          > pr_diff.txt
+
+        
+      - name: show diff file
+        run: cat pr_diff.txt
+          
+        

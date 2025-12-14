@@ -2,44 +2,32 @@ name: main workflow
 
 on: pull_request
 
-
 jobs:
-  
   code_review:
     name: client side code review
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       pull-requests: write
 
     steps:
-      
       - name: Checkout code
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-
-      - name: Fetch diff file
+      - name: Fetch PR diff
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
         run: |
           gh pr diff ${{ github.event.pull_request.number }} > pr_diff.txt
-
-      - name: Read PR diff
-        id: read_diff
-        run: |
-          echo "PR_DIFF<<EOF" >> $GITHUB_ENV
-          cat pr_diff.txt >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
 
       - name: Run Gemini CLI
         id: gemini
         uses: google-github-actions/run-gemini-cli@v0.1.16
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-
           prompt: |
             You are a senior security engineer.
 
@@ -53,27 +41,26 @@ jobs:
 
             --- CODE DIFF ---
             ```
-            $PR_DIFF
+            $(cat pr_diff.txt)
             ```
 
             Review priorities:
-            1. 🔴 **Security issues** (XSS, DOM injection, unsafe eval, token leaks, insecure storage)
-            2. 🟠 **Bugs & logic errors**
-            3. 🔵 **Code quality & maintainability**
+            1. 🔴 Security issues (XSS, DOM injection, hardcoded secrets)
+            2. 🟠 Bugs & logic errors
+            3. 🔵 Code quality & maintainability
 
             Output format:
             - 🔴 Critical Security Issues
             - 🟠 Bugs / Logical Errors
             - 🔵 Code Quality
-            - ✅ Overall Recommendation (Approve / Request Changes)
+            - ✅ Overall Recommendation
 
-            Be concise, concrete, and actionable.
-        
+            Be concise and actionable.
 
-      - name: Create pr comment
+      - name: Create PR comment
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "${{ steps.gemini.outputs.text }}" > gemini_comment.md
-
-          gh pr comment ${{ github.event.pull_request.number }} --body-file gemini_comment.md
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body-file gemini_comment.md

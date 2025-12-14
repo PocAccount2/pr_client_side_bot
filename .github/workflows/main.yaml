@@ -18,12 +18,8 @@ jobs:
 
       - name: fetch diff file
         run: |
-          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          -H "Accept: application/vnd.github.v3.diff" \
-          "${{ github.event.pull_request.diff_url }}" \
-          > pr_diff.txt
+          gh pr diff ${{ github.event.pull_request.number }} > pr_diff.txt
 
-        
       - name: show diff file
         run: cat pr_diff.txt
           
